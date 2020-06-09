@@ -37,5 +37,35 @@ namespace VOL.System.Controllers
         {
             return Json(await Service.GetCurrentUserInfo());
         }
+
+        [HttpPost, Route("loginCode"), AllowAnonymous]
+        public async Task<IActionResult> LoginCode(string code)
+        {
+            return Json(await Service.Login(code));
+        }
+
+        [HttpPost, Route("loginOpenId"), AllowAnonymous]
+        public async Task<IActionResult> LoginOpenId(string openid)
+        {
+            return Json(await Service.LoginOpenId(openid));
+        }
+
+        [HttpPost, Route("register"), AllowAnonymous]
+        public async Task<IActionResult> Register(string code, string encryptedData, string iv, string signature)
+        {
+            return Json(await Service.Register(code, encryptedData, iv, signature));
+        }
+
+        [HttpPost, Route("registerUser"), AllowAnonymous]
+        public async Task<IActionResult> RegisterUser(string openid, string nickName, string avatarUrl, int gender)
+        {
+            return Json(await Service.RegisterUser(openid, nickName, avatarUrl, gender));
+        }
+
+        [HttpPost, Route("checkToken"), AllowAnonymous]
+        public async Task<IActionResult> CheckToken(string token)
+        {
+            return Json(await Service.CheckToken(token));
+        }
     }
 }

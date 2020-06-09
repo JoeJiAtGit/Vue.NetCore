@@ -12,6 +12,16 @@ namespace VOL.System.IServices
         Task<WebResponseContent> ReplaceToken();
         Task<WebResponseContent> ModifyPwd(string oldPwd, string newPwd);
         Task<WebResponseContent> GetCurrentUserInfo();
+
+        Task<WebResponseContent> Login(string code);
+
+        Task<WebResponseContent> LoginOpenId(string openid);
+
+        Task<WebResponseContent> Register(string code, string encryptedData, string iv, string signature);
+
+        Task<WebResponseContent> RegisterUser(string openid, string nickName, string avatarUrl, int gender);
+
+        Task<WebResponseContent> CheckToken(string token);
     }
 }
 

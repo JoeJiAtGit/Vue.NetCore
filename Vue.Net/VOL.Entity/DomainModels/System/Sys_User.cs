@@ -36,10 +36,17 @@ namespace VOL.Entity.DomainModels
        [Required(AllowEmptyStrings=false)]
        public int User_Id { get; set; }
 
-       /// <summary>
-       ///性别
-       /// </summary>
-       [Display(Name ="性别")]
+        /// <summary>
+        ///微信用户openid
+        /// </summary>
+        [Display(Name = "微信用户openid")]
+        [MaxLength(300)]
+        public string OpenId { get; set; }
+
+        /// <summary>
+        ///性别
+        /// </summary>
+        [Display(Name ="性别")]
        [Column(TypeName="int")]
        [Editable(true)]
        public int? Gender { get; set; }

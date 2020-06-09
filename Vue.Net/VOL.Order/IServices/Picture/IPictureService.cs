@@ -6,7 +6,7 @@ using VOL.Entity.DomainModels;
 
 namespace VOL.Order.IServices
 {
-    public partial interface ISellOrderListService : IService<SellOrderList>
+    public partial interface IPictureService : IService<Picture>
     {
     }
 }

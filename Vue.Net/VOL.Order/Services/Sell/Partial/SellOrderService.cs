@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using VOL.Core.Configuration;
 using VOL.Core.Enums;
 using VOL.Core.Extensions;
@@ -32,7 +33,7 @@ namespace VOL.Order.Services
         //1、使用 repository. 使用原生EF  repository.DbContext
         //    repository.DbContext.Set<Sys_User>().Find() 
         //    SellOrderRepository.Instance.Find()        
-        //    SellOrderListRepository.Instance.Find()
+        //    SellOrderItemRepository.Instance.Find()
         //    DBServerProvider.SqlDapper
         //    DBServerProvider.DbContext
         //    以上方式都能访问数据库
@@ -72,7 +73,7 @@ namespace VOL.Order.Services
         // type.GetKeyName();
         //判断某个字段是否有EditableAttribute属性
         //  key.ContainsCustomAttributes(typeof(EditableAttribute));
-        
+
         //12、常用工具类Vol.Core->Utilities 
 
         //写入日志 : Logger.Info();
@@ -86,11 +87,11 @@ namespace VOL.Order.Services
         /// <returns></returns>
         public override object GetDetailPage(PageDataOptions pageData)
         {
-           
+
             //此处是从前台提交的原生的查询条件，这里可以自己过滤
             QueryRelativeList = (List<SearchParameters> parameters) =>
             {
-               
+
             };
             //查询前可以自已设定查询表达式的条件
             QueryRelativeExpression = (IQueryable<SellOrder> queryable) =>
@@ -121,7 +122,7 @@ namespace VOL.Order.Services
         /// <returns></returns>
         public override WebResponseContent Add(SaveModel saveDataModel)
         {
-            WebResponseContent responseContent= WebResponseContent.Instance;
+            WebResponseContent responseContent = WebResponseContent.Instance;
             //此处saveModel是从前台提交的原生数据，可对数据进修改过滤
             AddOnExecute = (SaveModel saveModel) =>
             {
@@ -131,7 +132,7 @@ namespace VOL.Order.Services
             // 在保存数据库前的操作，所有数据都验证通过了，这一步执行完就执行数据库保存
             AddOnExecuting = (SellOrder order, object list) =>
             {
-                List<SellOrderList> orderLists = list as List<SellOrderList>;
+                List<SellOrderItem> orderLists = list as List<SellOrderItem>;
                 if (orderLists == null || orderLists.Count == 0)
                 {//如果没有界面上没有填写明细，则中断执行
                     return responseContent.Error("必须填写明细数据");
@@ -146,9 +147,9 @@ namespace VOL.Order.Services
             // 在保存数据库后的操作，此时已进行数据提交，但未提交事务，如果返回false，则会回滚提交
             AddOnExecuted = (SellOrder order, object list) =>
             {
-                if (order.Qty < 10)
-                {  //如果输入的销售数量<10，会回滚数据库
-                    return responseContent.Error("销售数量必须大于1000");
+                if (order.OrderTotal < 10)
+                {  //如果输入的销售总价<10，会回滚数据库
+                    return responseContent.Error("销售总价必须大于1000");
                 }
                 return responseContent.OK("已新建成功,台AddOnExecuted方法返回的消息");
             };
@@ -173,12 +174,12 @@ namespace VOL.Order.Services
               {
                   if (order.TranNo == "2019000001810001")
                   {
-                      return new WebResponseContent().Error("不能更新此[" + order.TranNo + "]单号");
+                      return new WebResponseContent().Error("不能删除此[" + order.TranNo + "]单号");
                   }
                   //新增的明细
-                  List<SellOrderList> add = addList as List<SellOrderList>;
+                  List<SellOrderItem> add = addList as List<SellOrderItem>;
                   //修改的明细
-                  List<SellOrderList> update = updateList as List<SellOrderList>;
+                  List<SellOrderItem> update = updateList as List<SellOrderItem>;
                   //删除的行的Id
                   var guids = delKeys?.Select(x => (Guid)x);
                   return new WebResponseContent().OK();
@@ -190,9 +191,9 @@ namespace VOL.Order.Services
             UpdateOnExecuted = (SellOrder order, object addList, object updateList, List<object> delKeys) =>
               {
                   //新增的明细
-                  List<SellOrderList> add = addList as List<SellOrderList>;
+                  List<SellOrderItem> add = addList as List<SellOrderItem>;
                   //修改的明细
-                  List<SellOrderList> update = updateList as List<SellOrderList>;
+                  List<SellOrderItem> update = updateList as List<SellOrderItem>;
                   //删除的行的主键
                   var guids = delKeys?.Select(x => (Guid)x);
                   return new WebResponseContent().OK();
@@ -272,6 +273,73 @@ namespace VOL.Order.Services
                 return new WebResponseContent().OK();
             };
             return base.Import(files);
+        }
+
+        public async Task<WebResponseContent> GetOrderList(bool hasRefund, int status)
+        {
+            string msg = string.Empty;
+            WebResponseContent responseContent = new WebResponseContent();
+            try
+            {
+
+                //var orderList = repository.FindAllIncluding(o => o.SellOrderItem).Where(o => o.CustomerId == UserContext.Current.UserId).ToList();
+
+                //var ordersIncludeItems = await repository.FindAsync(o => o.CustomerId == UserContext.Current.UserId, o => new { Order = o, OrderItems = o.SellOrderItem });
+
+                //var data = new
+                //{
+                //    OrderList = ordersIncludeItems.Select(o => o.Order),
+
+                //};
+
+                var orders = await repository.FindAsync(o => o.CustomerId == UserContext.Current.UserId);
+                List<SellOrderItem> list = new List<SellOrderItem>();
+
+                foreach (var item in orders)
+                {
+                    var items = await SellOrderItemRepository.Instance.FindAsync(orderItem => orderItem.SellOrderId == item.SellOrderId);
+                    list.AddRange(items);
+                }
+
+                List<object> bla = new List<object>();
+                foreach (var item in list)
+                {
+                    var productName = ProductRepository.Instance.Find(p => p.ProductId == item.ProductId, p => p.Name).FirstOrDefault();
+
+                    var pictureList = new List<string>();
+                    var pictureIds = await Product_Picture_MappingRepository.Instance.FindAsync(mapping => mapping.ProductId == item.ProductId, mapping => mapping.PictureId);
+
+                    foreach (var pictureId in pictureIds)
+                    {
+                        var pictureBit = PictureRepository.Instance.Find(p => p.Id == pictureId, p => p.PictureBinary);
+                        pictureList.AddRange(pictureBit);
+                    }
+                    bla.Add(
+                        new
+                        {
+                            OrderId = item.SellOrderId,
+                            ProductName = productName,
+                            Pictures = pictureList
+
+                        });
+                }
+
+                responseContent.Data = new
+                {
+                    OrderList = orders,
+                    Products = bla
+                };
+                return responseContent.OK(ResponseType.OperSuccess);// throw new System.NotImplementedException();
+            }
+            catch (Exception ex)
+            {
+                msg = ex.Message + ex.StackTrace;
+                return responseContent.Error(ResponseType.ServerError);
+            }
+            finally
+            {
+                Logger.Info(msg);
+            }
         }
     }
 }

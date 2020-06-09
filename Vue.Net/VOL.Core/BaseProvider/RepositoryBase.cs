@@ -221,6 +221,63 @@ namespace VOL.Core.BaseProvider
             return DbContext.Set<TEntity>().Include(incluedProperty);
         }
 
+        public IQueryable<TEntity> FindAllIncluding(params Expression<Func<TEntity, object>>[] propertySelectors)
+        {
+            IQueryable<TEntity> query = DBSet;
+
+            if (!propertySelectors.IsNullOrEmpty())
+            {
+                foreach (var propertySelector in propertySelectors)
+                {
+                    query = query.Include(propertySelector);
+                }
+            }
+
+            return query;
+        }
+
+        /// <summary>
+        /// Gets the first or default entity based on a predicate, orderby delegate and include delegate. This method default no-tracking query.
+        /// </summary>
+        /// <param name="selector">The selector for projection.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <param name="orderBy">A function to order elements.</param>
+        /// <param name="include">A function to include navigation properties</param>
+        /// <param name="disableTracking"><c>True</c> to disable changing tracking; otherwise, <c>false</c>. Default to <c>true</c>.</param>
+        /// <returns>An <see cref="IPagedList{TEntity}"/> that contains elements that satisfy the condition specified by <paramref name="predicate"/>.</returns>
+        /// <remarks>This method default no-tracking query.</remarks>
+        public TResult GetFirstOrDefault<TResult>(Expression<Func<TEntity, TResult>> selector,
+                                                  Expression<Func<TEntity, bool>> predicate = null,
+                                                  Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
+                                                  Func<IQueryable<TEntity>, IIncludableQueryable<TEntity, object>> include = null,
+                                                  bool disableTracking = true)
+        {
+            IQueryable<TEntity> query = DBSet;
+            if (disableTracking)
+            {
+                query = query.AsNoTracking();
+            }
+
+            if (include != null)
+            {
+                query = include(query);
+            }
+
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+
+            if (orderBy != null)
+            {
+                return orderBy(query).Select(selector).FirstOrDefault();
+            }
+            else
+            {
+                return query.Select(selector).FirstOrDefault();
+            }
+        }
+
         /// <summary>
         /// 通过条件查询返回指定列的数据(将TEntity映射到匿名或实体T)
         ///var result = Sys_UserRepository.GetInstance.Find(x => x.UserName == loginInfo.userName, p => new { uname = p.UserName });
@@ -312,7 +369,7 @@ namespace VOL.Core.BaseProvider
         public virtual int Update<TSource>(TSource entity, bool saveChanges = false) where TSource : class
         {
             return UpdateRange<TSource>(new List<TSource>() { entity }, new string[0], saveChanges);
-        }
+        } 
         public virtual int UpdateRange<TSource>(IEnumerable<TSource> entities, Expression<Func<TSource, object>> properties, bool saveChanges = false) where TSource : class
         {
             return UpdateRange<TSource>(entities, properties?.GetExpressionProperty(), saveChanges);

@@ -9,6 +9,9 @@ using VOL.Core.BaseProvider;
 using VOL.Core.EFDbContext;
 using VOL.Core.Extensions.AutofacManager;
 using VOL.Entity.DomainModels;
+using System;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace VOL.System.Repositories
 {
@@ -23,6 +26,7 @@ namespace VOL.System.Repositories
         {
             get { return AutofacContainerModule.GetService<ISys_DictionaryListRepository>(); }
         }
+
     }
 }
 

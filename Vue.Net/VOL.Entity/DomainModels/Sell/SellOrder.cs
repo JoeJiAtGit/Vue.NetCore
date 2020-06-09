@@ -13,20 +13,10 @@ using VOL.Entity.SystemModels;
 
 namespace VOL.Entity.DomainModels
 {
-    [Entity(TableCnName = "销售订单",DetailTable =  new Type[] { typeof(SellOrderList)},DetailTableCnName = "订单明细")]
+    [Entity(TableCnName = "销售订单",TableName = "SellOrder",DetailTable =  new Type[] { typeof(SellOrderItem)},DetailTableCnName = "订单明细")]
     public class SellOrder:BaseEntity
     {
         /// <summary>
-       ///Id
-       /// </summary>
-       [Key]
-       [Display(Name ="Id")]
-       [MaxLength(36)]
-       [Column(TypeName="uniqueidentifier")]
-       [Required(AllowEmptyStrings=false)]
-       public Guid Order_Id { get; set; }
-
-       /// <summary>
        ///订单类型
        /// </summary>
        [Display(Name ="订单类型")]
@@ -39,8 +29,8 @@ namespace VOL.Entity.DomainModels
        ///运单号
        /// </summary>
        [Display(Name ="运单号")]
-       [MaxLength(100)]
-       [Column(TypeName="nvarchar(100)")]
+       [MaxLength(200)]
+       [Column(TypeName="nvarchar(200)")]
        [Editable(true)]
        [Required(AllowEmptyStrings=false)]
        public string TranNo { get; set; }
@@ -49,20 +39,11 @@ namespace VOL.Entity.DomainModels
        ///销售订单号
        /// </summary>
        [Display(Name ="销售订单号")]
-       [MaxLength(255)]
-       [Column(TypeName="nvarchar(255)")]
+       [MaxLength(510)]
+       [Column(TypeName="nvarchar(510)")]
        [Editable(true)]
        [Required(AllowEmptyStrings=false)]
        public string SellNo { get; set; }
-
-       /// <summary>
-       ///销售数量
-       /// </summary>
-       [Display(Name ="销售数量")]
-       [Column(TypeName="int")]
-       [Editable(true)]
-       [Required(AllowEmptyStrings=false)]
-       public int Qty { get; set; }
 
        /// <summary>
        ///审核状态
@@ -83,8 +64,8 @@ namespace VOL.Entity.DomainModels
        ///审核人
        /// </summary>
        [Display(Name ="审核人")]
-       [MaxLength(100)]
-       [Column(TypeName="nvarchar(100)")]
+       [MaxLength(200)]
+       [Column(TypeName="nvarchar(200)")]
        public string Auditor { get; set; }
 
        /// <summary>
@@ -98,8 +79,8 @@ namespace VOL.Entity.DomainModels
        ///备注
        /// </summary>
        [Display(Name ="备注")]
-       [MaxLength(1000)]
-       [Column(TypeName="nvarchar(1000)")]
+       [MaxLength(2000)]
+       [Column(TypeName="nvarchar(2000)")]
        [Editable(true)]
        public string Remark { get; set; }
 
@@ -114,8 +95,8 @@ namespace VOL.Entity.DomainModels
        ///创建人
        /// </summary>
        [Display(Name ="创建人")]
-       [MaxLength(255)]
-       [Column(TypeName="nvarchar(255)")]
+       [MaxLength(510)]
+       [Column(TypeName="nvarchar(510)")]
        [Editable(true)]
        public string Creator { get; set; }
 
@@ -138,8 +119,8 @@ namespace VOL.Entity.DomainModels
        ///修改人
        /// </summary>
        [Display(Name ="修改人")]
-       [MaxLength(255)]
-       [Column(TypeName="nvarchar(255)")]
+       [MaxLength(510)]
+       [Column(TypeName="nvarchar(510)")]
        public string Modifier { get; set; }
 
        /// <summary>
@@ -150,8 +131,79 @@ namespace VOL.Entity.DomainModels
        [Editable(true)]
        public DateTime? ModifyDate { get; set; }
 
+       /// <summary>
+       ///支付状态
+       /// </summary>
+       [Display(Name ="支付状态")]
+       [Column(TypeName="int")]
+       [Required(AllowEmptyStrings=false)]
+       public int PaymentStatusId { get; set; }
+
+       /// <summary>
+       ///发货状态
+       /// </summary>
+       [Display(Name ="发货状态")]
+       [Column(TypeName="int")]
+       [Required(AllowEmptyStrings=false)]
+       public int ShippingStatusId { get; set; }
+
+       /// <summary>
+       ///订单状态
+       /// </summary>
+       [Display(Name ="订单状态")]
+       [Column(TypeName="int")]
+       [Required(AllowEmptyStrings=false)]
+       public int OrderStatusId { get; set; }
+
+       /// <summary>
+       ///收货地址Id
+       /// </summary>
+       [Display(Name ="收货地址Id")]
+       [Column(TypeName="int")]
+       public int? PickupAddressId { get; set; }
+
+       /// <summary>
+       ///发货地址Id
+       /// </summary>
+       [Display(Name ="发货地址Id")]
+       [Column(TypeName="int")]
+       public int? ShippingAddressId { get; set; }
+
+       /// <summary>
+       ///客户Id
+       /// </summary>
+       [Display(Name ="客户Id")]
+       [Column(TypeName="int")]
+       [Required(AllowEmptyStrings=false)]
+       public int CustomerId { get; set; }
+
+       /// <summary>
+       ///总价
+       /// </summary>
+       [Display(Name ="总价")]
+       [DisplayFormat(DataFormatString="18,4")]
+       [Column(TypeName="decimal")]
+       [Required(AllowEmptyStrings=false)]
+       public decimal OrderTotal { get; set; }
+
+       /// <summary>
+       ///店铺Id
+       /// </summary>
+       [Display(Name ="店铺Id")]
+       [Column(TypeName="int")]
+       public int? StoreId { get; set; }
+
+       /// <summary>
+       ///
+       /// </summary>
+       [Key]
+       [Display(Name ="SellOrderId")]
+       [Column(TypeName="uniqueidentifier")]
+       [Required(AllowEmptyStrings=false)]
+       public Guid SellOrderId { get; set; }
+
        [Display(Name ="订单明细")]
-       public List<SellOrderList> SellOrderList { get; set; }
+       public List<SellOrderItem> SellOrderItem { get; set; }
 
     }
 }

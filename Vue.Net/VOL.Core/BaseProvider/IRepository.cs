@@ -139,7 +139,16 @@ namespace VOL.Core.BaseProvider
 
         Task<bool> ExistsAsync<TExists>(Expression<Func<TExists, bool>> predicate) where TExists : class;
 
-        IIncludableQueryable<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, TProperty>> incluedProperty);
+        /// <summary>
+        /// Used to get a IQueryable that is used to retrieve entities from entire table.
+        /// One or more 
+        /// </summary>
+        /// <param name="propertySelectors">A list of include expressions.</param>
+        /// <returns>IQueryable to be used to select entities from database</returns>
+        IQueryable<TEntity> FindAllIncluding(params Expression<Func<TEntity, object>>[] propertySelectors);
+         
+
+        //IIncludableQueryable<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, TProperty>> incluedProperty);
         /// <summary>
         /// 
         /// </summary>

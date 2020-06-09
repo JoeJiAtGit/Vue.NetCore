@@ -26,6 +26,7 @@ namespace VOL.Core.Enums
         NoKey,
         NoKeyDel,
         KeyError,
-        Other
+        Other,
+        UserNotFound=10000
     }
 }

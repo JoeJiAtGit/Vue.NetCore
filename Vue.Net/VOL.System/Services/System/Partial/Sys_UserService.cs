@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Senparc.Weixin;
+using Senparc.Weixin.MP.AdvancedAPIs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -388,6 +390,138 @@ namespace VOL.System.Services
                 return responseData;
             };
             return base.Export(pageData);
+        }
+
+        public async Task<WebResponseContent> Login(string code)
+        {
+
+            string msg = string.Empty;
+            WebResponseContent responseContent = new WebResponseContent();
+            try
+            {
+
+                var tokenResult = await OAuthApi.GetAccessTokenAsync(AppSetting.GetSettingString("Authentication:WeChat:AppId"), AppSetting.GetSettingString("Authentication:WeChat:AppSecret"), code);
+                if (tokenResult.errcode != ReturnCode.请求成功)
+                {
+                    return responseContent.Error(ResponseType.LoginError);
+                }
+                responseContent = await LoginOpenId(tokenResult.openid);
+
+
+
+                return responseContent;
+            }
+            catch (Exception ex)
+            {
+                msg = ex.Message + ex.StackTrace;
+                return responseContent.Error(ResponseType.ServerError);
+            }
+            finally
+            {
+                Logger.Info(LoggerType.Login, code, responseContent.Message, msg);
+            }
+
+
+
+
+        }
+
+        public async Task<WebResponseContent> LoginOpenId(string openid)
+        {
+            string msg = string.Empty;
+            WebResponseContent responseContent = new WebResponseContent();
+            try
+            {
+                var user = await repository.FindAsIQueryable(x => x.OpenId == openid)
+                .FirstOrDefaultAsync();
+
+                if (user == null)
+                    return responseContent.Error(ResponseType.UserNotFound);
+
+                string token = JwtHelper.IssueJwt(new UserInfo()
+                {
+                    User_Id = user.User_Id,
+                    UserName = user.UserName
+                });
+                user.Token = token;
+                responseContent.Data = new { token, userName = user.UserTrueName, img = user.HeadImageUrl };
+                repository.Update(user, x => x.Token, true);
+                UserContext.Current.LogOut(user.User_Id);
+
+                //loginInfo.PassWord = string.Empty;
+                return responseContent.OK(ResponseType.LoginSuccess);
+            }
+            catch (Exception ex)
+            {
+                msg = ex.Message + ex.StackTrace;
+                return responseContent.Error(ResponseType.ServerError);
+            }
+            finally
+            {
+                Logger.Info(LoggerType.Login, openid, responseContent.Message, msg);
+            }
+        }
+
+        public async Task<WebResponseContent> Register(string code, string encryptedData, string iv, string signature)
+        {
+            string msg = string.Empty;
+            WebResponseContent responseContent = new WebResponseContent();
+            return responseContent.Error(await Task.Run(() => "NotImplement"));
+
+        }
+
+        public async Task<WebResponseContent> RegisterUser(string openid, string nickName, string avatarUrl, int gender)
+        {
+            string msg = string.Empty;
+            WebResponseContent responseContent = new WebResponseContent();
+            try
+            {
+                var user = await repository.FindAsIQueryable(x => x.OpenId == openid)
+                .FirstOrDefaultAsync();
+
+                if (user != null)
+                    return responseContent.Error("用户名已经被注册");
+
+                user = new Sys_User()
+                {
+                    OpenId = openid,
+                    UserName = openid,
+                    UserTrueName = nickName,
+                    HeadImageUrl = avatarUrl,
+                    Gender = gender,
+                    Role_Id = 1001,
+                    RoleName = GetChildrenName(1001),
+                    Enable = 1
+                };
+
+               
+
+                base.AddOnExecuted = (Sys_User sys_User, object list) =>
+                {
+                    return responseContent.OK($"用户新建成功.帐号{user.UserName}");
+                };
+
+                return Add<Sys_User>(user);
+            }
+            catch (Exception ex)
+            {
+                msg = ex.Message + ex.StackTrace;
+                return responseContent.Error(ResponseType.ServerError);
+            }
+            finally
+            {
+                Logger.Info(LoggerType.ApiRegister, nickName, responseContent.Message, msg);
+            }
+        }
+
+
+        public async Task<WebResponseContent> CheckToken(string token)
+        {
+            return await Task.Run(() =>
+            {
+                return JwtHelper.IsExp(token) ? new WebResponseContent().Error(ResponseType.TokenExpiration) : new WebResponseContent().OK();
+            });
+
         }
     }
 }

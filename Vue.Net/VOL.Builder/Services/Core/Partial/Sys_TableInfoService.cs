@@ -1,5 +1,5 @@
 ﻿using DairyStar.Builder.Utility;
-using Microsoft.EntityFrameworkCore;
+//using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyModel;
 using Newtonsoft.Json;
 using System;
@@ -75,16 +75,15 @@ namespace DairyStar.Builder.Services
         /// <returns></returns>
         public async Task<(string, string)> GetTableTree()
         {
-            var treeData = await repository.FindAsIQueryable(x => 1 == 1)
-                .Select(c => new
-                {
-                    id = c.Table_Id,
-                    pId = c.ParentId,
-                    parentId = c.ParentId,
-                    name = c.ColumnCNName,
-                    orderNo = c.OrderNo
-                }).OrderByDescending(c => c.orderNo).ToListAsync();
-            var treeList = treeData.Select(a => new
+            var treeData = await repository.FindAsync(x => 1 == 1, c => new
+            {
+                id = c.Table_Id,
+                pId = c.ParentId,
+                parentId = c.ParentId,
+                name = c.ColumnCNName,
+                orderNo = c.OrderNo
+            });
+            var treeList = treeData.OrderByDescending(c => c.orderNo).Select(a => new
             {
                 a.id,
                 a.pId,
@@ -281,8 +280,10 @@ DISTINCT
             if (columns == null || columns.Count == 0)
                 return webResponse.Error("未获取到【" + tableName + "】表结构信息，请确认表是否存在");
 
-            Sys_TableInfo tableInfo = repository.FindAsIQueryable(x => x.TableName == tableName)
-                 .Include(o => o.TableColumns).FirstOrDefault();
+            //Sys_TableInfo tableInfo = repository.FindAsIQueryable(x => x.TableName == tableName)
+            //     .Include(o => o.TableColumns).FirstOrDefault();
+            Sys_TableInfo tableInfo = repository.FindAllIncluding(o => o.TableColumns)
+                .Where(x => x.TableName == tableName).FirstOrDefault();
             if (tableInfo == null)
                 return webResponse.Error("未获取到【" + tableName + "】的配置信息，请使用新建功能");
 
@@ -604,8 +605,8 @@ DISTINCT
             //如果有明细，加载明细的数据
             if (!string.IsNullOrEmpty(sysTableInfo.DetailName))
             {
-                Sys_TableInfo detailTable = repository.FindAsIQueryable(x => x.TableName == sysTableInfo.DetailName)
-                    .Include(x => x.TableColumns).FirstOrDefault();
+                Sys_TableInfo detailTable = repository.FindAllIncluding(x => x.TableColumns).Where(x => x.TableName == sysTableInfo.DetailName)
+                    .FirstOrDefault();
                 if (detailTable == null)
                     return $"请先生成明细表{ sysTableInfo.DetailName}的配置!";
                 if (detailTable.TableColumns == null || detailTable.TableColumns.Count == 0)
@@ -1109,9 +1110,8 @@ DISTINCT
                 return new WebResponseContent().Error("只有超级管理员才能进行此操作");
             }
             tableId = InitTable(parentId, tableName?.Trim(), columnCNName, nameSpace, foldername, tableId, isTreeLoad);
-            Sys_TableInfo tableInfo = repository
-                .FindAsIQueryable(x => x.Table_Id == tableId)
-                .Include(c => c.TableColumns)
+            Sys_TableInfo tableInfo = repository.FindAllIncluding(c => c.TableColumns)
+                .Where(x => x.Table_Id == tableId)
                 .FirstOrDefault();
             if (tableInfo.TableColumns != null)
             {
@@ -1123,9 +1123,10 @@ DISTINCT
         public async Task<WebResponseContent> DelTree(int table_Id)
         {
             if (table_Id == 0) return new WebResponseContent().Error("没有传入参数");
-            Sys_TableInfo tableInfo = await repository.FindAsIQueryable(x => x.Table_Id == table_Id)
-                .Include(c => c.TableColumns)
-                .FirstOrDefaultAsync();
+            Sys_TableInfo tableInfo =  repository
+                .FindAllIncluding(c => c.TableColumns)
+                .Where(x => x.Table_Id == table_Id)
+                .FirstOrDefault();
             if (tableInfo == null) return new WebResponseContent().OK();
             if (tableInfo.TableColumns != null && tableInfo.TableColumns.Count > 0)
             {
@@ -1407,7 +1408,7 @@ DISTINCT
                        || column.ColumnType == "guid"
                    || (IsMysql() && column.ColumnType == "string" && column.Maxlength == 36))
                 {
-                    columnType = "Guid"+(column.IsNull == 1?"?":"");
+                    columnType = "Guid" + (column.IsNull == 1 ? "?" : "");
                 }
                 AttributeBuilder.Append("       public " + columnType + " " + column.ColumnName + " { get; set; }");
                 AttributeBuilder.Append("\r\n\r\n       ");

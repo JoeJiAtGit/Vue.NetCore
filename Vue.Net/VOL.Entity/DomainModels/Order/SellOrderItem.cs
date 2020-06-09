@@ -13,49 +13,10 @@ using VOL.Entity.SystemModels;
 
 namespace VOL.Entity.DomainModels
 {
-    [Entity(TableCnName = "订单明细")]
-    public class SellOrderList:BaseEntity
+    [Entity(TableCnName = "订单明细",TableName = "SellOrderItem")]
+    public class SellOrderItem:BaseEntity
     {
         /// <summary>
-       ///
-       /// </summary>
-       [Key]
-       [Display(Name ="OrderList_Id")]
-       [MaxLength(36)]
-       [Column(TypeName="uniqueidentifier")]
-       [Required(AllowEmptyStrings=false)]
-       public Guid OrderList_Id { get; set; }
-
-       /// <summary>
-       ///订单Id
-       /// </summary>
-       [Display(Name ="订单Id")]
-       [MaxLength(36)]
-       [Column(TypeName= "uniqueidentifier")]
-       [Required(AllowEmptyStrings=false)]
-       public Guid Order_Id { get; set; }
-
-       /// <summary>
-       ///商品名称
-       /// </summary>
-       [Display(Name ="商品名称")]
-       [MaxLength(200)]
-       [Column(TypeName="nvarchar(200)")]
-       [Editable(true)]
-       [Required(AllowEmptyStrings=false)]
-       public string ProductName { get; set; }
-
-       /// <summary>
-       ///批次
-       /// </summary>
-       [Display(Name ="批次")]
-       [MaxLength(255)]
-       [Column(TypeName="nvarchar(255)")]
-       [Editable(true)]
-       [Required(AllowEmptyStrings=false)]
-       public string MO { get; set; }
-
-       /// <summary>
        ///数量
        /// </summary>
        [Display(Name ="数量")]
@@ -68,7 +29,7 @@ namespace VOL.Entity.DomainModels
        ///重量
        /// </summary>
        [Display(Name ="重量")]
-       [DisplayFormat(DataFormatString="11,2")]
+       [DisplayFormat(DataFormatString="18,2")]
        [Column(TypeName="decimal")]
        [Editable(true)]
        public decimal? Weight { get; set; }
@@ -77,8 +38,8 @@ namespace VOL.Entity.DomainModels
        ///备注
        /// </summary>
        [Display(Name ="备注")]
-       [MaxLength(1000)]
-       [Column(TypeName="nvarchar(1000)")]
+       [MaxLength(2000)]
+       [Column(TypeName="nvarchar(2000)")]
        [Editable(true)]
        public string Remark { get; set; }
 
@@ -93,8 +54,8 @@ namespace VOL.Entity.DomainModels
        ///创建人
        /// </summary>
        [Display(Name ="创建人")]
-       [MaxLength(255)]
-       [Column(TypeName="nvarchar(255)")]
+       [MaxLength(510)]
+       [Column(TypeName="nvarchar(510)")]
        public string Creator { get; set; }
 
        /// <summary>
@@ -115,8 +76,8 @@ namespace VOL.Entity.DomainModels
        ///修改人
        /// </summary>
        [Display(Name ="修改人")]
-       [MaxLength(255)]
-       [Column(TypeName="nvarchar(255)")]
+       [MaxLength(510)]
+       [Column(TypeName="nvarchar(510)")]
        public string Modifier { get; set; }
 
        /// <summary>
@@ -125,6 +86,47 @@ namespace VOL.Entity.DomainModels
        [Display(Name ="修改时间")]
        [Column(TypeName="datetime")]
        public DateTime? ModifyDate { get; set; }
+
+       /// <summary>
+       ///商品Id
+       /// </summary>
+       [Display(Name ="商品Id")]
+       [Column(TypeName="int")]
+       [Required(AllowEmptyStrings=false)]
+       public int ProductId { get; set; }
+
+       /// <summary>
+       ///含税价
+       /// </summary>
+       [Display(Name ="含税价")]
+       [DisplayFormat(DataFormatString="18,4")]
+       [Column(TypeName="decimal")]
+       [Required(AllowEmptyStrings=false)]
+       public decimal PriceInclTax { get; set; }
+
+       /// <summary>
+       ///描述
+       /// </summary>
+       [Display(Name ="描述")]
+       [MaxLength(20000)]
+       [Column(TypeName="nvarchar(20000)")]
+       public string AttributeDescription { get; set; }
+
+       /// <summary>
+       ///
+       /// </summary>
+       [Key]
+       [Display(Name ="SellOrderItemId")]
+       [Column(TypeName="uniqueidentifier")]
+       [Required(AllowEmptyStrings=false)]
+       public Guid SellOrderItemId { get; set; }
+
+       /// <summary>
+       ///
+       /// </summary>
+       [Display(Name ="SellOrderId")]
+       [Column(TypeName="uniqueidentifier")]
+       public Guid? SellOrderId { get; set; }
 
        
     }
